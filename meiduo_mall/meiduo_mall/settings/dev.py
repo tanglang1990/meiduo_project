@@ -199,3 +199,7 @@ LOGGING = {
         },
     }
 }
+
+
+# from django.conf import global_settings
+AUTH_USER_MODEL = 'users.User'
