@@ -122,3 +122,28 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# Cache
+# https://docs.djangoproject.com/zh-hans/2.1/topics/cache/
+CACHES = {
+    "default": { # 默认
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "session": { # session
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+}
+
+# 修改session存储机制使用Redis保存
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# 使用名为"session"的Redis配置项存储session数据
+SESSION_CACHE_ALIAS = "default"

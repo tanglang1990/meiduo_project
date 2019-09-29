@@ -1,5 +1,8 @@
+certifi==2019.9.11
 Django==1.11.11
+django-redis==4.10.0
 Jinja2==2.10.1
 MarkupSafe==1.1.1
 PyMySQL==0.9.3
 pytz==2019.2
+redis==3.3.8
