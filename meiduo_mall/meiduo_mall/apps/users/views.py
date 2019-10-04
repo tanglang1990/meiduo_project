@@ -8,6 +8,21 @@ from django.views import View
 from django.contrib.auth import login
 
 from users.models import User
+from utils.response_code import RETCODE
+
+
+class UsernameCountView(View):
+    """判断用户名是否重复注册"""
+
+    def get(self, request, username):
+        """
+        :param username: 用户名
+        :return: JSON
+        """
+        # 实现主体业务逻辑：使用username查询对应的记录的条数(filter返回的是满足条件的结果集)
+        count = User.objects.filter(username=username).count()
+        # 响应结果
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK', 'count': count})
 
 
 class RegisterView(View):
