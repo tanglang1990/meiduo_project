@@ -7,6 +7,18 @@ from verifications.libs.captcha.captcha import captcha
 from . import constants
 
 
+class SMSCodeView(View):
+    """短信验证码"""
+
+    def get(self, reqeust, mobile):
+        """
+        :param reqeust: 请求对象
+        :param mobile: 手机号
+        :return: JSON
+        """
+        pass
+
+
 class ImageCodeView(View):
     """图形验证码"""
 
