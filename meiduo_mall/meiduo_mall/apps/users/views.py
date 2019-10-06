@@ -17,7 +17,10 @@ class UserInfoView(View):
 
     def get(self, request):
         """提供个人信息界面"""
-        return render(request, 'user_center_info.html')
+        if request.user.is_authenticated():
+            return render(request, 'user_center_info.html')
+        else:
+            return redirect(reverse('users:login'))
 
 
 class LogoutView(View):
