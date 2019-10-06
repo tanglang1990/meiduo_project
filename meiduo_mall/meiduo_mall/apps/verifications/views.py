@@ -1,4 +1,9 @@
+from django.shortcuts import render
 from django.views import View
+from django_redis import get_redis_connection
+from django import http
+
+from verifications.libs.captcha.captcha import captcha
 
 
 class ImageCodeView(View):
@@ -6,8 +11,17 @@ class ImageCodeView(View):
 
     def get(self, request, uuid):
         """
-        :param request: 请求对象
-        :param uuid: 唯一标识图形验证码所属于的用户
+        :param uuid: 通用唯一识别码，用于唯一标识该图形验证码属于哪个用户的
         :return: image/jpg
         """
-        pass
+        # 实现主体业务逻辑：生成，保存，响应图形验证码
+        # 生成图形验证码
+        text, image = captcha.generate_captcha()
+
+        # 保存图形验证码
+        redis_conn = get_redis_connection('verify_code')
+        # redis_conn.setex('key', 'expires', 'value')
+        redis_conn.setex('img_%s' % uuid, 300, text)
+
+        # 响应图形验证码
+        return http.HttpResponse(image, content_type='image/jpg')
