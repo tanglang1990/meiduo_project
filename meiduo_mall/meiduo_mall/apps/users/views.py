@@ -5,11 +5,29 @@ from django.db import DatabaseError
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django_redis import get_redis_connection
 
 from users.models import User
 from utils.response_code import RETCODE
+
+
+class LogoutView(View):
+    """用户退出登录"""
+
+    def get(self, request):
+        """实现用户退出登录的逻辑"""
+        # 清除状态保持信息
+        logout(request)
+
+        # 退出登录后重定向到首页
+        response = redirect(reverse('contents:index'))
+
+        # 删除cookies中的用户名
+        response.delete_cookie('username')
+
+        # 响应结果
+        return response
 
 
 class LoginView(View):
@@ -45,7 +63,7 @@ class LoginView(View):
         # 使用remembered确定状态保持周期（实现记住登录）
         if remembered != 'on':
             # 没有记住登录：状态保持在浏览器会话结束后就销毁
-            request.session.set_expiry(0) # 单位是秒
+            request.session.set_expiry(0)  # 单位是秒
         else:
             # 记住登录：状态保持周期为两周:默认是两周
             request.session.set_expiry(None)
