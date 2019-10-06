@@ -13,6 +13,7 @@ let vm = new Vue({
         allow: '',
         image_code_url: '',
         uuid: '',
+        image_code: '',
 
         // v-show
         error_name: false,
@@ -25,6 +26,7 @@ let vm = new Vue({
         // error_message
         error_name_message: '',
         error_mobile_message: '',
+        error_image_code_message: '',
     },
     mounted() { // 页面加载完会被调用的
         // 生成图形验证码
@@ -97,6 +99,15 @@ let vm = new Vue({
             } else {
                 this.error_mobile_message = '您输入的手机号格式不正确';
                 this.error_mobile = true;
+            }
+        },
+        // 校验图形验证码吗
+        check_image_code() {
+            if (this.image_code.length != 4) {
+                this.error_image_code_message = '图形验证码格式不正确';
+                this.error_image_code = true;
+            } else {
+                this.error_image_code = false;
             }
         },
         // 校验是否勾选协议
