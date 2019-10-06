@@ -210,3 +210,6 @@ LOGGING = {
 
 # from django.conf import global_settings
 AUTH_USER_MODEL = 'users.User'
+
+# 指定自定义用户认证后端
+AUTHENTICATION_BACKENDS = ['users.utils.UsernameMobileBackend']
