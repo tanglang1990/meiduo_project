@@ -12,6 +12,14 @@ from users.models import User
 from utils.response_code import RETCODE
 
 
+class UserInfoView(View):
+    """用户中心"""
+
+    def get(self, request):
+        """提供个人信息界面"""
+        return render(request, 'user_center_info.html')
+
+
 class LogoutView(View):
     """用户退出登录"""
 
