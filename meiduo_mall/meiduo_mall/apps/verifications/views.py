@@ -9,9 +9,9 @@ from . import constants
 from meiduo_mall.utils.response_code import RETCODE
 from verifications.libs.yuntongxun.ccp_sms import CCP
 
-
 # 创建日志输出器
 logger = logging.getLogger('django')
+
 
 class SMSCodeView(View):
     """短信验证码"""
@@ -43,13 +43,15 @@ class SMSCodeView(View):
 
         # 生成短信验证码：随机6位数字，000007
         sms_code = '%06d' % random.randint(0, 999999)
-        logger.info(sms_code)  # 手动的输出日志，记录短信验证码
+        logger.info(f'给 {mobile} 发送注册手机验证码 {sms_code} ')  # 手动的输出日志，记录短信验证码
         # 保存短信验证码
         redis_conn.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
 
         # 发送短信验证码
-        CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES // 60],
-                                constants.SEND_SMS_TEMPLATE_ID)
+        from django.conf import settings
+        if not settings.DEBUG:
+            CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES // 60],
+                                    constants.SEND_SMS_TEMPLATE_ID)
 
         # 响应结果
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '发送短信成功'})
