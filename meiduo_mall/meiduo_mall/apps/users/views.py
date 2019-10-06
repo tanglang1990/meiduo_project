@@ -1,6 +1,7 @@
 import re
 
 from django import http
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -12,15 +13,16 @@ from users.models import User
 from utils.response_code import RETCODE
 
 
-class UserInfoView(View):
+class UserInfoView(LoginRequiredMixin, View):
     """用户中心"""
 
     def get(self, request):
         """提供个人信息界面"""
-        if request.user.is_authenticated():
-            return render(request, 'user_center_info.html')
-        else:
-            return redirect(reverse('users:login'))
+        # if request.user.is_authenticated():
+        #     return render(request, 'user_center_info.html')
+        # else:
+        #     return redirect(reverse('users:login'))
+        return render(request, 'user_center_info.html')
 
 
 class LogoutView(View):
