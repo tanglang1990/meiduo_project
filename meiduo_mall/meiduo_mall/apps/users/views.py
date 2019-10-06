@@ -12,6 +12,22 @@ from users.models import User
 from utils.response_code import RETCODE
 
 
+class LoginView(View):
+    """用户名登录"""
+
+    def get(self, request):
+        """提供用户登录页面"""
+        return render(request, 'login.html')
+
+    def post(self, request):
+        """
+        实现登录逻辑
+        :param request: 请求对象
+        :return: 登录结果
+        """
+        pass
+
+
 class UsernameCountView(View):
     """判断用户名是否重复注册"""
 
