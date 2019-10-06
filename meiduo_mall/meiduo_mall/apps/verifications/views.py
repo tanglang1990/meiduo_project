@@ -10,10 +10,13 @@ from meiduo_mall.utils.response_code import RETCODE
 from verifications.libs.yuntongxun.ccp_sms import CCP
 
 
+# 创建日志输出器
+logger = logging.getLogger('django')
+
 class SMSCodeView(View):
     """短信验证码"""
 
-    def get(self, reqeust, mobile):
+    def get(self, request, mobile):
         """
         :param mobile: 手机号
         :return: JSON
