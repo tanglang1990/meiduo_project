@@ -36,13 +36,17 @@ class QQAuthUserView(View):
                         redirect_uri=settings.QQ_REDIRECT_URI)
 
         try:
-            # 使用code获取access_token
+            # 使用code获取access_token，code是一次性的,获取完一次access_token之后就失效了
             access_token = oauth.get_access_token(code)
+        except Exception:
+            logger.error('OAuth2.0认证失败，获取access_token失败')
+            return http.HttpResponseServerError('OAuth2.0认证失败')
 
+        try:
             # 使用access_token获取openid
             openid = oauth.get_open_id(access_token)
-        except Exception as e:
-            logger.error(e)
+        except Exception:
+            logger.error('OAuth2.0认证失败，获取open_id失败')
             return http.HttpResponseServerError('OAuth2.0认证失败')
 
         # 使用openid判断该QQ用户是否绑定过美多商城的用户
@@ -55,6 +59,7 @@ class QQAuthUserView(View):
             return render(request, 'oauth_callback.html', context)
         else:
             # openid已绑定美多商城用户:oauth_user.user表示从QQ登陆模型类对象中找到对应的用户模型类对象
+            # Django的ORM
             login(request, oauth_user.user)
 
             # 重定向到state:从哪来，QQ登录完之后回哪而去
