@@ -81,8 +81,15 @@ class LoginView(View):
             # 记住登录：状态保持周期为两周:默认是两周
             request.session.set_expiry(None)
 
-        # 响应结果:重定向到首页
-        response = redirect(reverse('contents:index'))
+        # 响应结果
+        # 先取出next
+        next = request.GET.get('next')
+        if next:
+            # 重定向到next
+            response = redirect(next)
+        else:
+            # 重定向到首页
+            response = redirect(reverse('contents:index'))
 
         # 为了实现在首页的右上角展示用户名信息，我们需要将用户名缓存到cookie中
         # response.set_cookie('key', 'val', 'expiry')
