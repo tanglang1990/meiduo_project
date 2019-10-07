@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.contrib.auth import login
+from django.shortcuts import render, redirect
 from django.views import View
 from QQLoginTool.QQtool import OAuthQQ
 from django.conf import settings
@@ -11,6 +12,8 @@ from meiduo_mall.utils.response_code import RETCODE
 
 
 # 创建日志输出器
+from oauth.models import OAuthQQUser
+
 logger = logging.getLogger('django')
 
 
@@ -40,7 +43,25 @@ class QQAuthUserView(View):
             return http.HttpResponseServerError('OAuth2.0认证失败')
 
         # 使用openid判断该QQ用户是否绑定过美多商城的用户
-        pass
+        try:
+            oauth_user = OAuthQQUser.objects.get(openid=openid)
+        except OAuthQQUser.DoesNotExist:
+            # 如果openid没绑定美多商城用户
+            pass
+        else:
+            # 如果openid已绑定美多商城用户
+            # 实现状态保持
+            qq_user = oauth_user.user
+            login(request, qq_user)
+
+            # 响应结果
+            next = request.GET.get('state')
+            response = redirect(next)
+
+            # 登录时用户名写入到cookie，有效期15天
+            response.set_cookie('username', qq_user.username, max_age=3600 * 24 * 15)
+
+            return response
 
 
 class QQAuthURLView(View):
