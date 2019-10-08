@@ -32,8 +32,9 @@ class QQAuthUserView(View):
             return http.HttpResponseForbidden('获取code失败')
 
         # 创建工具对象
-        oauth = OAuthQQ(client_id=settings.QQ_CLIENT_ID, client_secret=settings.QQ_CLIENT_SECRET,
-                        redirect_uri=settings.QQ_REDIRECT_URI)
+        oauth = OAuthQQ(
+            client_id=settings.QQ_CLIENT_ID, client_secret=settings.QQ_CLIENT_SECRET,
+            redirect_uri=settings.QQ_REDIRECT_URI)
 
         try:
             # 使用code获取access_token，code是一次性的,获取完一次access_token之后就失效了
@@ -54,9 +55,10 @@ class QQAuthUserView(View):
             oauth_user = OAuthQQUser.objects.get(openid=openid)
         except OAuthQQUser.DoesNotExist:
             # openid未绑定美多商城用户
-            access_token_openid = generate_access_token(openid)
-            context = {'access_token_openid': access_token_openid}
-            return render(request, 'oauth_callback.html', context)
+            # access_token_openid = generate_access_token(openid)
+            # context = {'access_token_openid': access_token_openid}
+            request.session['openid'] = openid
+            return render(request, 'oauth_callback.html', {})
         else:
             # openid已绑定美多商城用户:oauth_user.user表示从QQ登陆模型类对象中找到对应的用户模型类对象
             # Django的ORM
@@ -97,10 +99,22 @@ class QQAuthUserView(View):
             return render(request, 'oauth_callback.html', {'sms_code_errmsg': '无效的短信验证码'})
         if sms_code_client != sms_code_server.decode():
             return render(request, 'oauth_callback.html', {'sms_code_errmsg': '输入短信验证码有误'})
+
         # 判断openid是否有效：openid使用itsdangerous签名之后只有600秒的有效期
-        openid = check_access_token(access_token_openid)
-        if not openid:
-            return render(request, 'oauth_callback.html', {'openid_errmsg': 'openid已失效'})
+        openid = request.session['openid']
+
+        # cookie  key value
+        # 用户1  sessionid  fb09lgmhb3jiso0e9c1457xtpogmjph7
+        # 用户2  sessionid  fb09lgmhb3jiso0e9c1457xtpogmjph8
+
+        #  session
+        #  用户1  fb09lgmhb3jiso0e9c1457xtpogmjph7    {'openid': '用户1的openid'}
+        #  用户2  fb09lgmhb3jiso0e9c1457xtpogmjph8    {'openid': '用户2的openid'}
+
+        # openid = check_access_token(access_token_openid)
+        # if not openid:
+        #     logger.error('用户openid过期或签名错误')
+        #     return render(request, 'oauth_callback.html', {'openid_errmsg': '绑定失败，请重新绑定'})
 
         # 使用手机号查询对应的用户是否存在
         try:
