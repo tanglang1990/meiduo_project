@@ -1,4 +1,4 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, AccessMixin
 from django import http
 
 from meiduo_mall.utils.response_code import RETCODE
@@ -12,6 +12,28 @@ class LoginRequiredJSONMixin(LoginRequiredMixin):
     def handle_no_permission(self):
         """直接响应JSON数据"""
         return http.JsonResponse({'code': RETCODE.SESSIONERR, 'errmsg': '用户未登录'})
+
+
+class LoginRequiredJSONMixin2(AccessMixin):
+    """
+    CBV mixin which verifies that the current user is authenticated.
+    """
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return http.JsonResponse({'code': RETCODE.SESSIONERR, 'errmsg': '用户未登录'})
+        return super(LoginRequiredMixin, self).dispatch(request, *args, **kwargs)
+
+
+class LoginRequiredJSONMixin3:
+    """
+    CBV mixin which verifies that the current user is authenticated.
+    """
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return http.JsonResponse({'code': RETCODE.SESSIONERR, 'errmsg': '用户未登录'})
+        return super(LoginRequiredMixin, self).dispatch(request, *args, **kwargs)
+
+
 
 """
 def handle_no_permission(self):

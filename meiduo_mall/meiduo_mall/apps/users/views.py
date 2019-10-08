@@ -10,7 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from users.models import User
 from meiduo_mall.utils.response_code import RETCODE
-from meiduo_mall.utils.views import LoginRequiredJSONMixin
+from meiduo_mall.utils.views import LoginRequiredJSONMixin, LoginRequiredJSONMixin3
 
 # Create your views here.
 
@@ -18,6 +18,10 @@ from meiduo_mall.utils.views import LoginRequiredJSONMixin
 # 创建日志输出器
 logger = logging.getLogger('django')
 
+
+# Mixin  混入
+# View
+# 先继承Mixin，最后继承View， 因为类视图继承是前面的没有才会使用后面的
 
 class EmailView(LoginRequiredJSONMixin, View):
     """添加邮箱"""
@@ -55,13 +59,13 @@ class UserInfoView(LoginRequiredMixin, View):
         # else:
         #     return redirect(reverse('users:login'))
 
-        context = {
-            'username': request.user.username,
-            'mobile': request.user.mobile,
-            'email': request.user.email,
-            'email_active': request.user.email_active
-        }
-        return render(request, 'user_center_info.html', context)
+        # context = {
+        #     'username': request.user.username,
+        #     'mobile': request.user.mobile,
+        #     'email': request.user.email,
+        #     'email_active': request.user.email_active
+        # }
+        return render(request, 'user_center_info.html')
 
 
 class LogoutView(View):

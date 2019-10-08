@@ -58,7 +58,7 @@ class QQAuthUserView(View):
             # access_token_openid = generate_access_token(openid)
             # context = {'access_token_openid': access_token_openid}
             request.session['openid'] = openid
-            return render(request, 'oauth_callback.html', {})
+            return render(request, 'oauth_callback.html')
         else:
             # openid已绑定美多商城用户:oauth_user.user表示从QQ登陆模型类对象中找到对应的用户模型类对象
             # Django的ORM

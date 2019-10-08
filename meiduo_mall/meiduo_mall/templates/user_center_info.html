@@ -155,10 +155,10 @@
     </div>
 </div>
 <script type="text/javascript">
-    let username = "{{ username }}";
-    let mobile = "{{ mobile }}";
-    let email = "{{ email }}";
-    let email_active = "{{ email_active }}";
+    let username = "{{ user.username }}";
+    let mobile = "{{ user.mobile }}";
+    let email = "{{ user.email }}";
+    let email_active = "{{ user.email_active }}";
 </script>
 <script type="text/javascript" src="{{ static('js/common.js') }}"></script>
 <script type="text/javascript" src="{{ static('js/user_center_info.js') }}"></script>

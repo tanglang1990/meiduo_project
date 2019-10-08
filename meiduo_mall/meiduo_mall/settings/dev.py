@@ -74,6 +74,8 @@ TEMPLATES = [
         },
     },
 ]
+
+from django.contrib.auth.context_processors import auth
 from meiduo_mall.utils.jinja2_env import jinja2_environment
 
 WSGI_APPLICATION = 'meiduo_mall.wsgi.application'
@@ -230,4 +232,9 @@ EMAIL_HOST = 'smtp.yeah.net' # 发邮件主机
 EMAIL_PORT = 25 # 发邮件端口
 EMAIL_HOST_USER = 'dailyfreshzxc@yeah.net' # 授权的邮箱
 EMAIL_HOST_PASSWORD = 'dailyfresh123' # 邮箱授权时获得的密码，非注册登录密码
-EMAIL_FROM = '美多商城<dailyfreshzxc@yeah.net>' # 发件人抬头
+# EMAIL_FROM = '美多商城<dailyfreshzxc@yeah.net>' # 发件人抬头
+EMAIL_FROM = '美多商城<{}>'.format(EMAIL_HOST_USER)
+
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # 导入邮件模块
+# EMAIL_FROM = '美多商城<ailyfreshzxc@yeah.net>'
