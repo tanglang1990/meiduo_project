@@ -14,6 +14,8 @@ from meiduo_mall.utils.views import LoginRequiredJSONMixin, LoginRequiredJSONMix
 from celery_tasks.email.tasks import send_verify_email
 
 # 创建日志输出器
+from users.utils import generate_verify_email_url
+
 logger = logging.getLogger('django')
 
 
@@ -44,8 +46,9 @@ class EmailView(LoginRequiredJSONMixin, View):
 
         # 发送邮箱验证邮件
         # send_verify_email()
-        verify_url = 'www.itcast.cn'
+        # verify_url = 'www.itcast.cn'
         # send_verify_email(email, verify_url) # 错误的写法
+        verify_url = generate_verify_email_url(request.user)
         send_verify_email.delay(email, verify_url)  # 一定要记得调用delay
 
         # 响应结果

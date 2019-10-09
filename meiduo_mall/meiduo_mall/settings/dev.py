@@ -18,7 +18,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE_DIR)
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -29,7 +28,6 @@ SECRET_KEY = '=t0h91g(81g61k=0g57*nfatxzzx69x-gqfsjbg6@tl&i71)nl'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -44,12 +42,10 @@ INSTALLED_APPS = [
     'oauth',
 ]
 
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -80,21 +76,19 @@ from meiduo_mall.utils.jinja2_env import jinja2_environment
 
 WSGI_APPLICATION = 'meiduo_mall.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', # 数据库引擎
-        'HOST': '127.0.0.1', # 数据库主机
-        'PORT': 3306, # 数据库端口
-        'USER': 'root', # 数据库用户名
-        'PASSWORD': '123456', # 数据库用户密码
-        'NAME': 'meiduo' # 数据库名字
+        'ENGINE': 'django.db.backends.mysql',  # 数据库引擎
+        'HOST': '127.0.0.1',  # 数据库主机
+        'PORT': 3306,  # 数据库端口
+        'USER': 'root',  # 数据库用户名
+        'PASSWORD': '123456',  # 数据库用户密码
+        'NAME': 'meiduo'  # 数据库名字
     },
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -114,7 +108,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
@@ -128,7 +121,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
@@ -139,21 +131,21 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 # Cache
 # https://docs.djangoproject.com/zh-hans/2.1/topics/cache/
 CACHES = {
-    "default": { # 默认
+    "default": {  # 默认
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
-    "session": { # session
+    "session": {  # session
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
-    "verify_code": { # 验证码
+    "verify_code": {  # 验证码
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/2",
         "OPTIONS": {
@@ -166,7 +158,6 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # 使用名为"session"的Redis配置项存储session数据
 SESSION_CACHE_ALIAS = "default"
-
 
 # 配置Logging
 LOGGING = {
@@ -210,7 +201,6 @@ LOGGING = {
     }
 }
 
-
 # from django.conf import global_settings
 AUTH_USER_MODEL = 'users.User'
 
@@ -225,16 +215,17 @@ QQ_CLIENT_ID = '101518219'
 QQ_CLIENT_SECRET = '418d84ebdc7241efb79536886ae95224'
 QQ_REDIRECT_URI = 'http://www.meiduo.site:8000/oauth_callback'
 
-
 # 邮件参数
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # 导入邮件模块
-EMAIL_HOST = 'smtp.yeah.net' # 发邮件主机
-EMAIL_PORT = 25 # 发邮件端口
-EMAIL_HOST_USER = 'dailyfreshzxc@yeah.net' # 授权的邮箱
-EMAIL_HOST_PASSWORD = 'dailyfresh123' # 邮箱授权时获得的密码，非注册登录密码
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # 导入邮件模块
+EMAIL_HOST = 'smtp.yeah.net'  # 发邮件主机
+EMAIL_PORT = 25  # 发邮件端口
+EMAIL_HOST_USER = 'dailyfreshzxc@yeah.net'  # 授权的邮箱
+EMAIL_HOST_PASSWORD = 'dailyfresh123'  # 邮箱授权时获得的密码，非注册登录密码
 # EMAIL_FROM = '美多商城<dailyfreshzxc@yeah.net>' # 发件人抬头
 EMAIL_FROM = '美多商城<{}>'.format(EMAIL_HOST_USER)
 
-
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # 导入邮件模块
 # EMAIL_FROM = '美多商城<ailyfreshzxc@yeah.net>'
+
+# 邮箱验证链接
+EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'

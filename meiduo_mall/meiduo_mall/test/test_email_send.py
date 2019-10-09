@@ -23,7 +23,7 @@ def send_verify_email(to_email, verify_url):
         # message是普通内容，就是你发什么，对应的邮箱就收到什么
         # html_message 是html的内容，你发的内容会被渲染html的页面展示出去
         # 二者选其一
-        send_mail(subject, "", settings.EMAIL_FROM, [to_email], html_message=html_message)
+        send_mail(subject, "", '美多商城<dailyfreshzxc@yeah.net>', [to_email], html_message=html_message)
     except Exception as e:
         print(e)
 
