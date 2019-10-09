@@ -48,11 +48,9 @@ class EmailView(LoginRequiredJSONMixin, View):
         # send_verify_email()
         # verify_url = 'www.itcast.cn'
         # send_verify_email(email, verify_url) # 错误的写法
-        end_verify_url = generate_verify_email_url(request.user)
-        scheme_host = '{}://{}'.format(request.scheme, request.get_host())
-        full_verify_url = scheme_host + end_verify_url
+        verify_url = generate_verify_email_url(request.user)
 
-        send_verify_email.delay(email, full_verify_url)  # 一定要记得调用delay
+        send_verify_email.delay(email, verify_url)  # 一定要记得调用delay
 
         # 响应结果
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK'})
