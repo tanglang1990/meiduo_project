@@ -1,12 +1,35 @@
 import re
 
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadData
 # 自定义用户认证的后端:实现多账号登录
 from django.contrib.auth.backends import ModelBackend
 from django.conf import settings
 
 from users.models import User
 from . import constants
+
+
+def check_verify_email_token(token):
+    """
+    反序列化token,获取到user
+    :param token: 序列化后的用户信息
+    :return: user
+    """
+    s = Serializer(settings.SECRET_KEY, constants.VERIFY_EMAIL_TOKEN_EXPIRES)
+    try:
+        data = s.loads(token)
+    except BadData:
+        return None
+    else:
+        # 从data中取出user_id和email
+        user_id = data.get('user_id')
+        email = data.get('email')
+        try:
+            user = User.objects.get(id=user_id, email=email)
+        except User.DoesNotExist:
+            return None
+        else:
+            return user
 
 
 def generate_verify_email_url(user):
