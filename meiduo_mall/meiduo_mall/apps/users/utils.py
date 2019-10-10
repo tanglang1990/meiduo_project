@@ -32,16 +32,20 @@ def check_verify_email_token(token):
             return user
 
 
-def generate_verify_email_url(user):
+def generate_verify_email_url(request):
     """
     生成邮箱激活链接
     :param user: 当前登录用户
     :return: http://www.meiduo.site:8000/emails/verification/?token=eyJhbGciOiJIUzUxMiIsImlhdCI6MTU1ODA2MDE0MSwiZXhwIjoxNTU4MTQ2NTQxfQ.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InpoYW5namllc2hhcnBAMTYzLmNvbSJ9.y1jaafj2Mce-LDJuNjkTkVbichoq5QkfquIAhmS_Vkj6m-FLOwBxmLTKkGG0Up4eGGfkhKuI11Lti0n3G9XI3Q
     """
     s = Serializer(settings.SECRET_KEY, constants.VERIFY_EMAIL_TOKEN_EXPIRES)
+    user = request.user
     data = {'user_id': user.id, 'email': user.email}
     token = s.dumps(data)
-    return settings.EMAIL_VERIFY_URL + '?token=' + token.decode()
+    #url_pre = '{}://{}/emails/verification/?token='.format(request.scheme, request.META['HTTP_HOST'])
+    url_pre = '{}://{}/emails/verification/?token='.format(request.scheme, request.get_host())
+    url = url_pre + token
+    return url
 
 
 def get_user_by_account(account):

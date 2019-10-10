@@ -79,7 +79,7 @@ class EmailView(LoginRequiredJSONMixin, View):
         # send_verify_email()
         # verify_url = 'www.itcast.cn'
         # send_verify_email(email, verify_url) # 错误的写法
-        verify_url = generate_verify_email_url(request.user)
+        verify_url = generate_verify_email_url(request)
 
         send_verify_email.delay(email, verify_url)  # 一定要记得调用delay
 

@@ -229,5 +229,5 @@ EMAIL_FROM = '美多商城<{}>'.format(EMAIL_HOST_USER)
 # EMAIL_FROM = '美多商城<ailyfreshzxc@yeah.net>'
 
 # 邮箱验证链接
-EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'
+# EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'
 
