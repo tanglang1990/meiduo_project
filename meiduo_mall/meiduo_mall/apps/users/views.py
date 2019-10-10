@@ -19,6 +19,14 @@ from users.utils import generate_verify_email_url, check_verify_email_token
 logger = logging.getLogger('django')
 
 
+class AddressCreateView(LoginRequiredJSONMixin, View):
+    """新增地址"""
+
+    def post(self, reqeust):
+        """实现新增地址逻辑"""
+        pass
+
+
 class AddressView(LoginRequiredMixin, View):
     """用户收货地址"""
 
