@@ -53,12 +53,15 @@ class DefaultAddressView(LoginRequiredJSONMixin, View):
     def put(self, reqeust, address_id):
         """实现设置默认地址逻辑"""
         try:
-            # 查询出当前哪个地址会作为登录用户的默认地址
-            address = Address.objects.get(id=address_id)
-
-            # 将指定的地址设置为当前登录用户的默认地址
-            reqeust.user.default_address = address
-            reqeust.user.save()
+            # # 查询出当前哪个地址会作为登录用户的默认地址
+            # address = Address.objects.get(id=address_id)
+            #
+            # # 将指定的地址设置为当前登录用户的默认地址
+            # reqeust.user.default_address = address
+            # reqeust.user.save()
+            user = reqeust.user
+            user.default_address_id = address_id
+            user.save()
         except Exception as e:
             logger.error(e)
             return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '设置默认地址失败'})
@@ -96,8 +99,7 @@ class UpdateDestoryAddressView(LoginRequiredMixin, View):
 
         # 使用最新的地址信息覆盖指定的旧的地址信息
         try:
-            Address.objects.filter(id=address_id).update(
-                user=request.user,
+            Address.objects.filter(id=address_id, user=request.user).update(
                 title=receiver,
                 receiver=receiver,
                 province_id=province_id,
@@ -132,9 +134,13 @@ class UpdateDestoryAddressView(LoginRequiredMixin, View):
         """删除地址"""
         # 实现指定地址的逻辑删除：is_delete=True
         try:
-            address = Address.objects.get(id=address_id)
-            address.is_deleted = True
-            address.save()
+            # address = Address.objects.get(id=address_id)
+            # if address.user == request.user:
+            #     address.is_deleted = True
+            #     address.save()
+            Address.objests.filter(id=address_id, user=request.user).update(
+                is_deleted = True
+            )
         except Exception as e:
             logger.error(e)
             return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '删除地址失败'})
@@ -150,9 +156,9 @@ class AddressCreateView(LoginRequiredJSONMixin, View):
         """实现新增地址逻辑"""
 
         # 判断用户地址数量是否超过上限：查询当前登录用户的地址数量
-        # count = Address.objects.filter(user=reqeust.user).count()
-        count = reqeust.user.addresses.count()  # 一查多，使用related_name查询
-        if count > constants.USER_ADDRESS_COUNTS_LIMIT:
+        # count = Address.objects.filter(user=reqeust.user, is_deleted=False).count()
+        count = reqeust.user.addresses.filter(is_deleted=False).count()  # 一查多，使用related_name查询
+        if count >= constants.USER_ADDRESS_COUNTS_LIMIT:
             return http.JsonResponse({'code': RETCODE.THROTTLINGERR, 'errmsg': '超出用户地址上限'})
 
         # 接收参数
@@ -181,43 +187,39 @@ class AddressCreateView(LoginRequiredJSONMixin, View):
 
         # 保存用户传入的地址信息
         try:
-            address = Address.objects.create(
-                user=reqeust.user,
-                title = receiver, # 标题默认就是收货人
-                receiver = receiver,
-                province_id = province_id,
-                city_id = city_id,
-                district_id = district_id,
-                place = place,
-                mobile = mobile,
-                tel = tel,
-                email = email,
-            )
-
+            json_dict['user'] = reqeust.user
+            json_dict['title'] = receiver
+            address = Address.objects.create(**json_dict)
             # 如果登录用户没有默认的地址，我们需要指定默认地址
-            if not reqeust.user.default_address:
-                reqeust.user.default_address = address
-                reqeust.user.save()
+            user = reqeust.user
+            if not user.default_address:
+                user.default_address = address
+                user.save()
         except Exception as e:
             logger.error(e)
             return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '新增地址失败'})
 
+        json_dict['id'] = address.id
+        json_dict['province'] = address.province.name
+        json_dict['city'] = address.city.name
+        json_dict['district'] = address.district.name
+        json_dict.pop('user')
         # 构造新增地址字典数据
-        address_dict = {
-            "id": address.id,
-            "title": address.title,
-            "receiver": address.receiver,
-            "province": address.province.name,
-            "city": address.city.name,
-            "district": address.district.name,
-            "place": address.place,
-            "mobile": address.mobile,
-            "tel": address.tel,
-            "email": address.email
-        }
+        # address_dict = {
+        #     "id": address.id,
+        #     "title": address.title,
+        #     "receiver": address.receiver,
+        #     "province": address.province.name,
+        #     "city": address.city.name,
+        #     "district": address.district.name,
+        #     "place": address.place,
+        #     "mobile": address.mobile,
+        #     "tel": address.tel,
+        #     "email": address.email
+        # }
 
         # 响应新增地址结果：需要将新增的地址返回给前端渲染
-        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '新增地址成功', 'address': address_dict})
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '新增地址成功', 'address': json_dict})
 
 
 class AddressView(LoginRequiredMixin, View):
@@ -232,7 +234,7 @@ class AddressView(LoginRequiredMixin, View):
         addresses = Address.objects.filter(user=login_user, is_deleted=False)
 
         # 将用户地址模型列表转字典列表:因为JsonResponse和Vue.js不认识模型类型，只有Django和Jinja2模板引擎认识
-        address_list= []
+        address_list = []
         for address in addresses:
             address_dict = {
                 "id": address.id,
@@ -249,6 +251,12 @@ class AddressView(LoginRequiredMixin, View):
             address_list.append(address_dict)
 
         # 构造上下文
+        # NUll   None
+        # if login_user.default_address:
+        #     default_address_id = login_user.default_address_id
+        # else:
+        #     default_address_id = 0
+
         context = {
             'default_address_id': login_user.default_address_id or 0,
             'addresses': address_list
