@@ -25,6 +25,7 @@ class User(AbstractUser):
 class Address(BaseModel):
     """用户地址"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses', verbose_name='用户')
+    # models.CharField(choices=((0, '轮播'), (1, '文字'), (2, '图片')))
     title = models.CharField(max_length=20, verbose_name='地址名称')
     receiver = models.CharField(max_length=20, verbose_name='收货人')
     province = models.ForeignKey('areas.Area', on_delete=models.PROTECT, related_name='province_addresses',

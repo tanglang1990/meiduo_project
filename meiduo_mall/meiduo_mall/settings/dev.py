@@ -233,3 +233,7 @@ EMAIL_FROM = '美多商城<{}>'.format(EMAIL_HOST_USER)
 # 邮箱验证链接
 # EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'
 
+DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fdfs_storage.FastDFSStorage'
+
+# FastDFS相关参数
+FDFS_BASE_URL = 'http://192.168.19.20:8888/'

@@ -16,16 +16,17 @@ class IndexView(View):
         """提供首页广告页面"""
         # 查询并展示商品分类
         # 准备商品分类对应的字典
-        categories = OrderedDict()
+        categories = OrderedDict()    #  {}
         # 查询所有的商品频道:37个一级类别
         channels = GoodsChannel.objects.order_by('group_id', 'sequence')
         # 遍历所有频道
-        for channel in channels:
+        for channel in channels:  #  100手机（1）  101相机（1）  102电脑（2）
             # 获取当前频道所在的组
-            group_id = channel.group_id
+            group_id = channel.group_id    # 2
             # 构造基本的数据框架:只有11个组
             if group_id not in categories:
                 categories[group_id] = {'channels': [], 'sub_cats': []}
+                # { '1': {'channels': [], 'sub_cats': [] }
 
             # 查询当前频道对应的一级类别
             cat1 = channel.category
@@ -35,6 +36,12 @@ class IndexView(View):
                 'name': cat1.name,
                 'url': channel.url
             })
+            #
+            # { '1': {'channels': [ { 'id': 100, 'name': '手机','url': url}
+            #  ， 'id': 101, 'name': '相机','url': url}  ],
+            #  'sub_cats': []
+            #   '2' : {'channels': [  { 'id': 102, 'name': '电脑','url': url} ], 'sub_cats': []}
+            # }
 
             # 查询二级和三级类别
             for cat2 in cat1.subs.all():  # 从一级类别找二级类别

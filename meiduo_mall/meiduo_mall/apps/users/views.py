@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django import http
 import re, json, logging
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.urls import reverse
 from django.contrib.auth import login, authenticate, logout
 from django_redis import get_redis_connection
@@ -185,38 +185,35 @@ class AddressCreateView(LoginRequiredJSONMixin, View):
             if not re.match(r'^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$', email):
                 return http.HttpResponseForbidden('参数email有误')
 
+        json_dict['user'] = reqeust.user
+        json_dict['title'] = receiver
+
         # 保存用户传入的地址信息
         try:
-            json_dict['user'] = reqeust.user
-            json_dict['title'] = receiver
-            address = Address.objects.create(**json_dict)
-            # 如果登录用户没有默认的地址，我们需要指定默认地址
-            user = reqeust.user
-            if not user.default_address:
-                user.default_address = address
-                user.save()
+            with transaction.atomic():
+                address = Address.objects.create(**json_dict)
+                # 如果登录用户没有默认的地址，我们需要指定默认地址
+                user = reqeust.user
+                if not user.default_address:
+                    user.default_address = address
+                    user.save()
         except Exception as e:
             logger.error(e)
             return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '新增地址失败'})
 
-        json_dict['id'] = address.id
-        json_dict['province'] = address.province.name
-        json_dict['city'] = address.city.name
-        json_dict['district'] = address.district.name
-        json_dict.pop('user')
         # 构造新增地址字典数据
-        # address_dict = {
-        #     "id": address.id,
-        #     "title": address.title,
-        #     "receiver": address.receiver,
-        #     "province": address.province.name,
-        #     "city": address.city.name,
-        #     "district": address.district.name,
-        #     "place": address.place,
-        #     "mobile": address.mobile,
-        #     "tel": address.tel,
-        #     "email": address.email
-        # }
+        address_dict = {
+            "id": address.id,
+            "title": address.title,
+            "receiver": address.receiver,
+            "province": address.province.name,
+            "city": address.city.name,
+            "district": address.district.name,
+            "place": address.place,
+            "mobile": address.mobile,
+            "tel": address.tel,
+            "email": address.email
+        }
 
         # 响应新增地址结果：需要将新增的地址返回给前端渲染
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '新增地址成功', 'address': json_dict})
@@ -258,7 +255,7 @@ class AddressView(LoginRequiredMixin, View):
         #     default_address_id = 0
 
         context = {
-            'default_address_id': login_user.default_address_id or 0,
+            'default_address_id': login_user.default_address_id,
             'addresses': address_list
         }
 

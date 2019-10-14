@@ -1,0 +1,8 @@
+<li>
+    {{ cat.name }}({{ cat.id }} )
+  <ul>
+    {% for cat in cat.subs.all() %}
+        {% include 'demo/child.html' %}
+    {% endfor %}
+   </ul>
+</li>
