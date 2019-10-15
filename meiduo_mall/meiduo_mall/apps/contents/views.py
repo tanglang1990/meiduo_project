@@ -62,6 +62,8 @@ class IndexView(View):
                 'sequence')  # 查询出未下架的广告并排序
 
         # 构造上下文
+        # from contents.utils import get_categories
+        # categories = get_categories()
         context = {
             'categories': categories,
             'contents': contents

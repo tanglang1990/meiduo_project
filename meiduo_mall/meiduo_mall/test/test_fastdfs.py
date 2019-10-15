@@ -16,5 +16,5 @@ print(client_config_path)
 
 client = Fdfs_client(client_config_path)  # 最好使用绝对路径，永远不会出问题
 # 3. 调用FastDFS客户端上传文件方法
-ret = client.upload_by_filename('../static/images/adv01.jpg')
+ret = client.upload_by_filename('../static/images/adv011.jpg')
 print(ret)

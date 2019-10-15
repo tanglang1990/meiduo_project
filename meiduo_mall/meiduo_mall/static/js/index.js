@@ -11,10 +11,6 @@ let vm = new Vue({
         cart_total_count: 0,
         carts: [],
     },
-    mounted(){
-        // 获取cookie中的用户名
-        this.username = getCookie('username');
-    },
     methods: {
         // 获取简单购物车数据
         get_carts(){
