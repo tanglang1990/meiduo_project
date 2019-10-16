@@ -3,7 +3,7 @@ from django.views import View
 from django import http
 # 分页器（有100万文字，需要制作成为一本书，先规定每页多少文字，然后得出一共多少页）
 # 数据库中的记录就是文字，我们需要考虑在分页时每页记录的条数，然后得出一共多少页
-from django.core.paginator import Paginator, EmptyPage
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from goods.models import GoodsCategory
 from contents.utils import get_categories
@@ -56,7 +56,7 @@ class ListView(View):
             sort_field = '-sales' # 按照销量由高到低排序
         else: # 只要不是'price'和'-sales'其他的所有情况都归为'default'
             sort = 'default' # 当出现?sort=itcast 也把sort设置我'default'
-            sort_field = 'create_time'
+            sort_field = '-create_time'
 
         # 查询商品分类
         categories = get_categories()
@@ -73,8 +73,15 @@ class ListView(View):
         # 获取到用户当前要看的那一页（核心数据）
         try:
             page_skus = paginator.page(page_num) # 获取到page_num页中的五条记录
+        except PageNotAnInteger:
+            # 如果页码不是整数
+            page_skus = paginator.page(1)
+            page_num = 1
         except EmptyPage:
-            return http.HttpResponseNotFound('Empty Page')
+            # 没有查到页的数据
+            page_skus = paginator.page(paginator.num_pages)
+            page_num = paginator.num_pages
+            #return http.HttpResponseNotFound('Empty Page')
         # 获取总页数：前端的分页插件需要使用
         total_page = paginator.num_pages
 
@@ -86,7 +93,8 @@ class ListView(View):
             'total_page': total_page,
             'page_num': page_num,
             'sort': sort,
-            'category_id': category_id
+            'category_id': category_id,
+            'category': category
         }
 
         return render(request, 'list.html', context)

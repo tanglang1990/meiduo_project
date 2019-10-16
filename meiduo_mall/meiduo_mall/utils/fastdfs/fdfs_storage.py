@@ -34,6 +34,7 @@ class FastDFSStorage(Storage):
         pass
 
     def url(self, name):
+        # return 'http://192.168.103.143:8888/' + name
         """
         返回文件的全路径
         :param name: 文件相对路径

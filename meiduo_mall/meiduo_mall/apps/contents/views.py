@@ -58,8 +58,9 @@ class IndexView(View):
         content_categories = ContentCategory.objects.all()
         for content_category in content_categories:
             # 使用广告类别查询出该类别对应的所有的广告内容
-            contents[content_category.key] = content_category.content_set.filter(status=True).order_by(
-                'sequence')  # 查询出未下架的广告并排序
+            contents[content_category.key] = content_category.content_set.filter(
+                status=True).order_by('sequence')  # 查询出未下架的广告并排序
+            # 链式查询  QuerySet.filter()    QuerySet
 
         # 构造上下文
         # from contents.utils import get_categories

@@ -106,11 +106,26 @@
 		</div>
 	</div>
 	<div class="breadcrumb">
-		<a href="http://shouji.jd.com/">{{ breadcrumb.cat1.name }}</a>
-		<span>></span>
-		<a href="javascript:;">{{ breadcrumb.cat2.name }}</a>
-        <span>></span>
-		<a href="javascript:;">{{ breadcrumb.cat3.name }}</a>
+{#        {{ category.parent.parent.goodschannel_set.first().url }}#}
+        {% if category  %}
+            {# 至少有一级类别 #}
+            {% if category.parent %}
+                {# 至少有二级类别，当前查的可能是三级也可能是二级 #}
+                {% if category.parent.parent %}
+                    {# 至少一共有三级类别，当前查的是第三级 #}
+                    <a href="javascript:;">{{ category.parent.parent.name }}</a>
+                    <span>></span>
+                 {% endif %}
+                    <a href="javascript:;">{{ category.parent.name }}</a>
+                <span>></span>
+             {% endif %}
+            <a href="javascript:;">{{ category.name }}</a>
+        {% endif %}
+{#		<a href="http://shouji.jd.com/">{{ breadcrumb.cat1.name }}</a>#}
+{#		<span>></span>#}
+{#		<a href="javascript:;">{{ breadcrumb.cat2.name }}</a>#}
+{#        <span>></span>#}
+{#		<a href="javascript:;">{{ breadcrumb.cat3.name }}</a>#}
 	</div>
 	<div class="main_wrap clearfix">
 		<div class="l_wrap fl clearfix">

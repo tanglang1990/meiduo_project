@@ -18,6 +18,8 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    # haystack
+    url(r'^search/', include('haystack.urls')),
     # demo
     url(r'^demo/', include('demo.urls')),
     # users

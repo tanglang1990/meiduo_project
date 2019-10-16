@@ -13,7 +13,7 @@ def get_breadcrumb(category):
     }
     if category.parent == None: # 说明category是一级
         breadcrumb['cat1'] = category
-    elif category.subs.count() == 0: # 说明category是三级
+    elif not category.subs.exists(): # 说明category是三级
         cat2 = category.parent
         breadcrumb['cat1'] = cat2.parent
         breadcrumb['cat2'] = cat2
