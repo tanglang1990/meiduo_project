@@ -1,8 +1,6 @@
 import os
 import django
 
-
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "meiduo_mall.settings.dev")
 django.setup()  # 让接下来的代码处在一个Django的环境中
 

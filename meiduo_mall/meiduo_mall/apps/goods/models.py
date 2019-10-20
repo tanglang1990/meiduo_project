@@ -17,6 +17,10 @@ class GoodsCategory(BaseModel):
     def __str__(self):
         return self.name
 
+    def get_hot_skus(self):
+        # 面向对象
+        return self.sku_set.filter(is_launched=True).order_by('-sales')[:2]
+
 
 class GoodsChannelGroup(BaseModel):
     """商品频道组"""
@@ -163,3 +167,19 @@ class SKUSpecification(BaseModel):
 
     def __str__(self):
         return '%s: %s - %s' % (self.sku, self.spec.name, self.option.value)
+
+
+class GoodsVisitCount(BaseModel):
+    """统计分类商品访问量模型类"""
+    category = models.ForeignKey(GoodsCategory, on_delete=models.CASCADE, verbose_name='商品分类')
+    count = models.IntegerField(verbose_name='访问量', default=0)
+    date = models.DateField(auto_now_add=True, verbose_name='统计日期')
+
+    class Meta:
+        db_table = 'tb_goods_visit'
+        verbose_name = '统计分类商品访问量'
+        verbose_name_plural = verbose_name
+        unique_together = (('date', 'category'),)
+
+
+

@@ -18,6 +18,87 @@ from users.utils import generate_verify_email_url, check_verify_email_token
 from . import constants
 
 logger = logging.getLogger('django')
+from django.shortcuts import render, redirect
+from django.views import View
+from django import http
+import re, json, logging
+from django.db import DatabaseError
+from django.urls import reverse
+from django.contrib.auth import login, authenticate, logout
+from django_redis import get_redis_connection
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from users.models import User, Address
+from meiduo_mall.utils.response_code import RETCODE
+from meiduo_mall.utils.views import LoginRequiredJSONMixin
+from celery_tasks.email.tasks import send_verify_email
+from users.utils import generate_verify_email_url, check_verify_email_token
+from . import constants
+from goods.models import SKU
+from carts.utils import merge_carts_cookies_redis
+
+# Create your views here.
+
+
+# 创建日志输出器
+logger = logging.getLogger('django')
+
+
+class UserBrowseHistory(LoginRequiredJSONMixin, View):
+    """用户浏览记录"""
+
+    def post(self, reqeust):
+        """保存用户商品浏览记录"""
+        # 接收参数
+        json_str = reqeust.body.decode()
+        json_dict = json.loads(json_str)
+        sku_id = json_dict.get('sku_id')
+
+        # 校验参数
+        try:
+            SKU.objects.get(id=sku_id)
+        except SKU.DoesNotExist:
+            return http.HttpResponseForbidden('参数sku_id错误')
+
+        # 保存sku_id到redis
+        redis_conn = get_redis_connection('history')
+        # user_key = 'history_%s' % reqeust.user.id,
+        # pl = redis_conn.pipeline()
+        # # 去掉列表中所有(count=0)存在的sku_id      [5, 3, 4, 2,  l]
+        # pl.lrem(user_key, 0, sku_id) # [5, 3,  2,  l]
+        # # 把当前sku_id放在最前面
+        # pl.lpush(user_key, sku_id) # [4, 5, 3,  2,  l]
+        # # 只保留索引0到4的5条记录
+        # pl.ltrim(user_key, 0, 4) # [4, 5, 3,  2,  l]
+
+        import time
+        redis_conn.zadd('history1_%s' % reqeust.user.id, {sku_id: time.time()})
+
+        # 响应结果
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK'})
+
+    def get(self, request):
+        """查询用户商品浏览记录"""
+        # 获取登录用户信息
+        user = request.user
+        # 创建连接到redis对象
+        redis_conn = get_redis_connection('history')
+        # 取出列表数据（核心代码）
+        #sku_ids = redis_conn.lrange('history_%s' % user.id, 0, -1)  # (0, 4)
+        sku_ids = redis_conn.zrevrange('history1_%s' % user.id, 0, 4)
+
+        # 将模型转字典
+        skus = []
+        for sku_id in sku_ids:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append({
+                'id': sku.id,
+                'name': sku.name,
+                'price': sku.price,
+                'default_image_url': sku.default_image.url
+            })
+
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK', 'skus': skus})
 
 
 class UpdateTitleAddressView(LoginRequiredJSONMixin, View):
@@ -139,7 +220,7 @@ class UpdateDestoryAddressView(LoginRequiredMixin, View):
             #     address.is_deleted = True
             #     address.save()
             Address.objests.filter(id=address_id, user=request.user).update(
-                is_deleted = True
+                is_deleted=True
             )
         except Exception as e:
             logger.error(e)
@@ -340,8 +421,14 @@ class UserInfoView(LoginRequiredMixin, View):
         #     'email': request.user.email,
         #     'email_active': request.user.email_active
         # }
-        return render(request, 'user_center_info.html')
-
+        # return render(request, 'user_center_info.html')
+        context = {
+            'username': request.user.username,
+            'mobile': request.user.mobile,
+            'email': request.user.email,
+            'email_active': request.user.email_active
+        }
+        return render(request, 'user_center_info.html', context)
 
 class LogoutView(View):
     """用户退出登录"""
@@ -412,6 +499,9 @@ class LoginView(View):
         # 为了实现在首页的右上角展示用户名信息，我们需要将用户名缓存到cookie中
         # response.set_cookie('key', 'val', 'expiry')
         response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+
+        # 用户登录成功，合并cookie购物车到redis购物车
+        response = merge_carts_cookies_redis(request=request, user=user, response=response)
 
         # 响应结果:重定向到首页
         return response
