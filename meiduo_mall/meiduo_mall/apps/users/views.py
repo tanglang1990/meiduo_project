@@ -62,14 +62,15 @@ class UserBrowseHistory(LoginRequiredJSONMixin, View):
 
         # 保存sku_id到redis
         redis_conn = get_redis_connection('history')
-        # user_key = 'history_%s' % reqeust.user.id,
-        # pl = redis_conn.pipeline()
-        # # 去掉列表中所有(count=0)存在的sku_id      [5, 3, 4, 2,  l]
-        # pl.lrem(user_key, 0, sku_id) # [5, 3,  2,  l]
-        # # 把当前sku_id放在最前面
-        # pl.lpush(user_key, sku_id) # [4, 5, 3,  2,  l]
-        # # 只保留索引0到4的5条记录
-        # pl.ltrim(user_key, 0, 4) # [4, 5, 3,  2,  l]
+        user_key = 'history_%s' % reqeust.user.id,
+        pl = redis_conn.pipeline()
+        # 去掉列表中所有(count=0)存在的sku_id      [5, 3, 4, 2,  l]
+        pl.lrem(user_key, 0, sku_id) # [5, 3,  2,  l]
+        # 把当前sku_id放在最前面
+        pl.lpush(user_key, sku_id) # [4, 5, 3,  2,  l]
+        # 只保留索引0到4的5条记录
+        pl.ltrim(user_key, 0, 4) # [4, 5, 3,  2,  l]
+        pl.execute()
 
         import time
         redis_conn.zadd('history1_%s' % reqeust.user.id, {sku_id: time.time()})
@@ -104,7 +105,7 @@ class UserBrowseHistory(LoginRequiredJSONMixin, View):
 class UpdateTitleAddressView(LoginRequiredJSONMixin, View):
     """更新地址标题"""
 
-    def put(self, reqeust, address_id):
+    def put(self, reqeust, address_id, aaa):
         """实现更新地址标题逻辑"""
         # 接收参数：title
         json_dict = json.loads(reqeust.body.decode())
@@ -501,7 +502,8 @@ class LoginView(View):
         response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
 
         # 用户登录成功，合并cookie购物车到redis购物车
-        response = merge_carts_cookies_redis(request=request, user=user, response=response)
+        # response =
+        merge_carts_cookies_redis(request=request, user=user, response=response)
 
         # 响应结果:重定向到首页
         return response

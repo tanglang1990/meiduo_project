@@ -9,7 +9,8 @@ def merge_carts_cookies_redis(request, user, response):
 
     # 判断cookies中的购物车数据是否存在
     if not cart_str:
-        return response
+        # return response
+        return False
 
     # 将 cart_str转成bytes类型的字符串
     cookie_cart_str_bytes = cart_str.encode()
@@ -32,9 +33,23 @@ def merge_carts_cookies_redis(request, user, response):
     """
 
     # 准备新的数据容器：保存新的sku_id:count、selected、unselected
-    new_cart_dict = {}
-    new_selected_add = []
-    new_selected_rem = []
+
+    """
+    {
+        "1":{
+            "count":"2",
+            "selected":True
+        },
+        "3":{
+            "count":"1",
+            "selected":False
+        }
+    }
+    """
+
+    new_cart_dict = {}    #  {1:2, 3:1}
+    new_selected_add = []  # [1]
+    new_selected_rem = []  # [2 ]
 
     # 遍历出cookies中的购物车数据
     for sku_id, cookie_dict in cookie_cart_dict.items():
@@ -56,6 +71,13 @@ def merge_carts_cookies_redis(request, user, response):
     redis_conn = get_redis_connection('carts')
     pl = redis_conn.pipeline()
 
+    # redis : carts_1  :  {4:2, 1:3}
+
+    # new_cart_dict = {}    #  {1:2, 3:1}
+    # new_selected_add = []  # [1]
+    # new_selected_rem = []  # [2 ]
+
+    # {4:2, 1:2, 3:1}
     pl.hmset('carts_%s' % user.id, new_cart_dict)
     if new_selected_add:
         pl.sadd('selected_%s' % user.id, *new_selected_add)
@@ -66,4 +88,6 @@ def merge_carts_cookies_redis(request, user, response):
     # 删除cookies
     response.delete_cookie('carts')
 
-    return response
+    print(id(response))
+
+    # return response

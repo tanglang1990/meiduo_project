@@ -49,6 +49,7 @@ class OrderInfo(BaseModel):
         return self.order_id
 
 
+
 class OrderGoods(BaseModel):
     """订单商品：多"""
     SCORE_CHOICES = (

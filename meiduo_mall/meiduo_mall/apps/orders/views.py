@@ -12,13 +12,15 @@ from users.models import Address
 from goods.models import SKU
 from orders.models import OrderInfo, OrderGoods
 from meiduo_mall.utils.response_code import RETCODE
+
+
 # Create your views here.
 
 
 class OrderSuccessView(LoginRequiredMixin, View):
     """提交订单成功页面"""
 
-    def get(self,request):
+    def get(self, request):
         """提供提交订单成功页面"""
         order_id = request.GET.get('order_id')
         payment_amount = request.GET.get('payment_amount')
@@ -52,33 +54,41 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
         except Address.DoesNotExist:
             return http.HttpResponseForbidden('参数address_id错误')
         # 判断pay_method是否合法
+        if pay_method not in [1, 2]:  # 不便于阅读，不知道1和2是什么
+            pass
+
+        # if pay_method not in [OrderInfo.PAY_METHOD_ALIPAY, OrderInfo.PAY_METHOD_CASH]:
+        #     pass
+
         if pay_method not in [OrderInfo.PAY_METHODS_ENUM['CASH'], OrderInfo.PAY_METHODS_ENUM['ALIPAY']]:
-            return http.HttpResponseForbidden('参数pay_method错误')
+            return http.HttpResponseBadRequest('参数pay_method错误')
 
-        # 明显的开启一次事务
-        with transaction.atomic():
-            # 在数据库操作之前需要指定保存点（保存数据库最初的状态）
-            save_id = transaction.savepoint()
-
-            # 暴力回滚
-            try:
+        try:
+            # 明显的开启一次事务
+            with transaction.atomic():
                 # 获取登录用户
                 user = request.user
                 # 获取订单编号：时间+user_id == '20190526165742000000001'
-                order_id = timezone.localtime().strftime('%Y%m%d%H%M%S') + ('%09d' % user.id)
+
+                # # USE_TZ = False
+                # 如果把使用时区设置成False， 那么就不能使用django的timezone模块，直接使用python的内置模块即可
+                # from datetime import datetime
+                # datetime.now().strftime('%Y%m%d%H%M%S')
+
+                order_id = timezone.localtime().strftime('%Y%m%d%H%M%S%f') + ('%09d' % user.id)
                 # 保存订单基本信息（一）
                 order = OrderInfo.objects.create(
-                    order_id = order_id,
-                    user = user,
-                    address = address,
-                    total_count = 0,
-                    total_amount = Decimal(0.00),
-                    freight = Decimal(10.00),
-                    pay_method = pay_method,
+                    order_id=order_id,
+                    user=user,
+                    address=address,
+                    total_count=0,
+                    total_amount=Decimal(0.00),
+                    freight=Decimal(10.00),
+                    pay_method=pay_method,
                     # status = 'UNPAID' if pay_method=='ALIPAY' else 'UNSEND'
-                    status = OrderInfo.ORDER_STATUS_ENUM['UNPAID'] if pay_method == OrderInfo.PAY_METHODS_ENUM['ALIPAY'] else OrderInfo.ORDER_STATUS_ENUM['UNSEND']
+                    status=OrderInfo.ORDER_STATUS_ENUM['UNPAID'] if pay_method == OrderInfo.PAY_METHODS_ENUM[
+                        'ALIPAY'] else OrderInfo.ORDER_STATUS_ENUM['UNSEND']
                 )
-
                 # 保存订单商品信息（多）
                 # 查询redis购物车中被勾选的商品
                 redis_conn = get_redis_connection('carts')
@@ -87,7 +97,7 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
                 # 被勾选的商品的sku_id：[b'1']
                 redis_selected = redis_conn.smembers('selected_%s' % user.id)
 
-                # 构造购物车中被勾选的商品的数据 {b'1': b'1'}
+                # 构造购物车中被勾选的商品的数据 {1: 1}
                 new_cart_dict = {}
                 for sku_id in redis_selected:
                     new_cart_dict[int(sku_id)] = int(redis_cart[sku_id])
@@ -99,7 +109,7 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
                     # 每个商品都有多次下单的机会，直到库存不足
                     while True:
                         # 读取购物车商品信息
-                        sku = SKU.objects.get(id=sku_id) # 查询商品和库存信息时，不能出现缓存，所以没用filter(id__in=sku_ids)
+                        sku = SKU.objects.get(id=sku_id)  # 查询商品和库存信息时，不能出现缓存，所以没用filter(id__in=sku_ids)
 
                         # 获取原始的库存和销量
                         origin_stock = sku.stock
@@ -110,12 +120,13 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
                         # 判断商品数量是否大于库存，如果大于，响应"库存不足"
                         if sku_count > origin_stock:
                             # 库存不足，回滚
-                            transaction.savepoint_rollback(save_id)
-                            return http.JsonResponse({'code': RETCODE.STOCKERR, 'errmsg': '库存不足'})
+                            # transaction.savepoint_rollback(save_id)
+                            raise Exception('库存不足')
+                            # return http.JsonResponse({'code': RETCODE.STOCKERR, 'errmsg': '库存不足'})
 
-                        # 模拟网络延迟
-                        import time
-                        time.sleep(7)
+                        # # 模拟网络延迟
+                        # import time
+                        # time.sleep(7)
 
                         # SKU 减库存，加销量
                         # sku.stock -= sku_count
@@ -124,7 +135,8 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
 
                         new_stock = origin_stock - sku_count
                         new_sales = origin_sales + sku_count
-                        result = SKU.objects.filter(id=sku_id, stock=origin_stock).update(stock=new_stock, sales=new_sales)
+                        result = SKU.objects.filter(id=sku_id, stock=origin_stock).update(stock=new_stock,
+                                                                                          sales=new_sales)
                         # 如果在更新数据时，原始数据变化了，返回0；表示有资源抢夺
                         if result == 0:
                             # 库存 10，要买1，但是在下单时，有资源抢夺，被买走1，剩下9个，如果库存依然满足，继续下单，直到库存不足为止
@@ -136,10 +148,10 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
                         sku.spu.save()
 
                         OrderGoods.objects.create(
-                            order = order,
-                            sku = sku,
-                            count = sku_count,
-                            price = sku.price,
+                            order=order,
+                            sku=sku,
+                            count=sku_count,
+                            price=sku.price,
                         )
 
                         # 累加订单商品的数量和总价到订单基本信息表
@@ -152,12 +164,8 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
                 # 再加最后的运费
                 order.total_amount += order.freight
                 order.save()
-            except Exception as e:
-                transaction.savepoint_rollback(save_id)
-                return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '下单失败'})
-
-            # 数据库操作成功，明显的提交一次事务
-            transaction.savepoint_commit(save_id)
+        except Exception as e:
+            return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '下单失败'})
 
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK', 'order_id': order_id})
 
@@ -171,11 +179,11 @@ class OrderSettlementView(LoginRequiredMixin, View):
         user = request.user
 
         # 查询用户收货地址:查询登录用户的没有被删除的收货地址
-        try:
-            addresses = Address.objects.filter(user=user, is_deleted=False)
-        except Exception as e:
-            # 如果没有查询出地址，可以去编辑收货地址
-            addresses = None
+        # try:
+        #     addresses = Address.objects.filter(user=user, is_deleted=False)
+        # except Exception as e:
+        #     # 如果没有查询出地址，可以去编辑收货地址
+        #     addresses = None
 
         # 查询redis购物车中被勾选的商品
         redis_conn = get_redis_connection('carts')
@@ -184,12 +192,13 @@ class OrderSettlementView(LoginRequiredMixin, View):
         # 被勾选的商品的sku_id：[b'1']
         redis_selected = redis_conn.smembers('selected_%s' % user.id)
         # 构造购物车中被勾选的商品的数据 {b'1': b'1'}
-        new_cart_dict = {}
+
+        new_cart_dict = {}  # {1: 1}
         for sku_id in redis_selected:
             new_cart_dict[int(sku_id)] = int(redis_cart[sku_id])
 
         # 获取被勾选的商品的sku_id
-        sku_ids = new_cart_dict.keys()
+        sku_ids = new_cart_dict.keys()  # [1, 2]
         skus = SKU.objects.filter(id__in=sku_ids)
 
         total_count = 0
@@ -198,18 +207,19 @@ class OrderSettlementView(LoginRequiredMixin, View):
         for sku in skus:
             # 遍历skus给每个sku补充count（数量）和amount（小计）
             sku.count = new_cart_dict[sku.id]
-            sku.amount = sku.price * sku.count # Decimal类型的
+            sku.amount = sku.price * sku.count  # Decimal类型的
 
             # 累加数量和金额
             total_count += sku.count
-            total_amount += sku.amount # 类型不同不能运算
+            total_amount += sku.amount  # 类型不同不能运算
 
         # 指定默认的邮费
         freight = Decimal(10.00)
 
+        # 'addresses': addresses,
         # 构造上下文
         context = {
-            'addresses': addresses,
+
             'skus': skus,
             'total_count': total_count,
             'total_amount': total_amount,

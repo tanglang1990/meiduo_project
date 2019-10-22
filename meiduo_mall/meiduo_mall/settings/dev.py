@@ -48,9 +48,8 @@ INSTALLED_APPS = [
     'goods',
     'carts',
     'orders',
+    'payment',
 ]
-
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -129,7 +128,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = False
+USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
@@ -259,16 +258,12 @@ DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fdfs_storage.FastDFSStorage'
 # FastDFS相关参数
 FDFS_BASE_URL = 'http://192.168.19.20:8888/'
 
-
-
-
-
 # Haystack
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
-        'URL': 'http://192.168.19.20:9200/', # Elasticsearch服务器ip地址，端口号固定为9200
-        'INDEX_NAME': 'meiduo_mall', # Elasticsearch建立的索引库的名称
+        'URL': 'http://192.168.19.20:9200/',  # Elasticsearch服务器ip地址，端口号固定为9200
+        'INDEX_NAME': 'meiduo_mall',  # Elasticsearch建立的索引库的名称
     },
 }
 
@@ -277,3 +272,9 @@ HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
 # haystack分页时每页记录条数
 HAYSTACK_SEARCH_RESULTS_PER_PAGE = 5
+
+# 支付宝
+ALIPAY_APPID = '2016082100308405'
+ALIPAY_DEBUG = True
+ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'
+ALIPAY_RETURN_URL = 'http://www.meiduo.site:8000/payment/status/'

@@ -53,9 +53,9 @@
 	<h3 class="common_title">确认收货地址</h3>
     <div class="common_list_con clearfix" id="get_site">
         <dl>
-        {% if addresses %}
+        {% if user.default_address %}
             <dt>寄送到：</dt>
-            {% for address in addresses %}
+            {% for address in user.get_address_list() %}
             <dd @click="nowsite={{ address.id }}"><input type="radio" v-model="nowsite" value="{{ address.id }}">{{ address.province }} {{ address.city }} {{ address.district }} （{{ address.receiver }} 收） {{ address.mobile }}</dd>
             {% endfor %}
         {% endif %}

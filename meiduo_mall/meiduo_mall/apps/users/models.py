@@ -21,6 +21,9 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    def get_address_list(self):
+        return self.addresses.filter(is_deleted=False)
+
 
 class Address(BaseModel):
     """用户地址"""

@@ -79,7 +79,6 @@ class DetailView(View):
         for spec in sku_specs:
             sku_key.append(spec.option.id)
 
-        # sku_key[8， 11]
 
         # 获取当前商品的所有SKU
         skus = sku.spu.sku_set.all()
@@ -103,7 +102,7 @@ class DetailView(View):
         goods_specs = sku.spu.specs.order_by('id')
         # 若当前sku的规格信息不完整，则不再继续
         if len(sku_key) < len(goods_specs):
-            return
+            return http.HttpResponseServerError('数据错误')
 
         # sku_key :  [ '当前sku的颜色的id', '当前sku的内存的id']
         # spec_sku_map {('颜色的id', '内存的id'): sku_id}
